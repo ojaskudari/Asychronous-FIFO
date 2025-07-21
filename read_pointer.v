@@ -1,42 +1,45 @@
-module read_pointer #(parameter SIZE = 4)
-(
-  input   read_clock,
-  input   read_reset_n,
-  input   [SIZE:0]read_pointer_grey,
+module Read_pointer #( parameter SIZE=4)(
+    input r_clk, r_rst_n, r_en,
+    input [SIZE:0] s_wr_ptr,  // Corrected name to indicate it's the synchronized write pointer
 
-  output  read_empty,
-  output  [SIZE-1:0]read_address,
-  output  [SIZE:0] read_pointer
+    output reg r_empty,
+    wire [SIZE-1:0] r_addr,
+    output reg [SIZE:0] r_ptr
 );
 
-wire [SIZE:0] read_pointer_binary;
-wire [SIZE :0] read_pointer_binary_next;
-wire [SIZE :0] read_pointer_grey_next;
-wire temp_read_empty;
+wire [SIZE:0] r_bin_nxt, r_gray_nxt;
+reg [SIZE:0] r_bin;
+wire temp_r_empty;
 
-
-always@(posedge clk or negedge reset_n)
-begin 
-      if(!reset_n)
-      {read_pointer_binary,read_pointer}=0;
-      else
-      {read_pointer_binary,read_pointer}=read_pointer_binary_next,read_pointer_grey_next;
+always @(posedge r_clk or negedge r_rst_n) 
+begin
+    if (!r_rst_n)
+    begin
+        r_bin <= 0;
+        r_ptr <= 0;
+    end
+    else
+    begin
+        r_bin <= r_bin_nxt;
+        r_ptr <= r_gray_nxt;  // Fixed incorrect assignment
+    end
 end
 
-assign read_address = read_pointer_binary[SIZE-1:0];
-assign read_pointer_binary_next = read_pointer_binary + (read_inc & ~read_empty); 
+assign r_addr = r_bin[SIZE-1:0];
+assign r_bin_nxt = r_bin + (r_en & !r_empty);  // Fixed incorrect control signals
 
-bin2gray #(SIZE) read_bin2gray(.bin(read_pointer_binary_next),.gray(read_pointer_grey_next));
+// Instantiate Binary to Gray converter
+binary_to_gray b2gr(.bin(r_bin_nxt), .gray(r_gray_nxt));
 
+// Correct FIFO Empty Detection Logic
+assign temp_r_empty = (r_ptr == s_wr_ptr);
 
-assign temp_read_empty = (read_pointer_grey_next == read_pointer_binary);
-
-
-always@(posedge clk or negedge reset_n)
-begin 
-      if(!reset_n)
-      read_empty<=0;
-      else
-      read_empty<=temp_read_empty;
+always @(posedge r_clk or negedge r_rst_n)
+begin
+    if (!r_rst_n)
+        r_empty <= 1'b1;
+    else
+        r_empty <= temp_r_empty;  // Update correctly
 end
+
 endmodule

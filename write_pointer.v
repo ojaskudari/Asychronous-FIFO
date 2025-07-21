@@ -1,51 +1,40 @@
-module write_pointer #(parameter SIZE = 4)
-(
-    input                   write_clk,         // Write clock
-    input                   write_reset_n,     // Active low reset for write domain
-    input                   write_inc,         // Write increment signal
-    input      [SIZE:0]     read_pointer_grey, // Synchronized read pointer (Gray code)
-
-    output reg              write_full,        // Full flag for FIFO
-    output      [SIZE-1:0]  write_address,     // Write address for FIFO memory
-    output reg [SIZE:0]     write_pointer      // Write pointer (Gray code)
+module Write_pointer #(parameter SIZE=4)(
+    input w_clk, w_rst_n, w_en,
+    input [SIZE:0] s_rd_ptr,
+    output reg w_full,
+    output [SIZE-1:0] w_addr,
+    output reg [SIZE:0] w_ptr
 );
 
+wire [SIZE:0] w_bin_nxt, w_gray_nxt;
+reg [SIZE:0] w_bin;
+wire temp_w_full;
 
-    reg [SIZE:0] write_pointer_binary;
-
-    wire [SIZE:0] write_pointer_binary_next;
-    wire [SIZE:0] write_pointer_grey_next;
-    wire          temp_write_full;
-
-
-    always @(posedge write_clk or negedge write_reset_n)
-    begin
-        if (!write_reset_n)
-            {write_pointer_binary, write_pointer} <= 0;
-        else
-            {write_pointer_binary, write_pointer} <= {write_pointer_binary_next, write_pointer_grey_next};
+always @(posedge w_clk or negedge w_rst_n) begin
+    if (!w_rst_n) begin
+        w_bin <= 0;
+        w_ptr <= 0;
     end
-
-    
-    assign write_address = write_pointer_binary[SIZE-1:0];
-
-
-    assign write_pointer_binary_next = write_pointer_binary + (write_inc & ~write_full);
-
-    
-    bin2gray #(SIZE) write_bin2gray (
-        .bin(write_pointer_binary_next),
-        .gray(write_pointer_grey_next)
-    );
-
-
-    assign temp_write_full = (write_pointer_grey_next == {~read_pointer_grey[SIZE:SIZE-1], read_pointer_grey[SIZE-2:0]});
-    always @(posedge write_clk or negedge write_reset_n)
-    begin
-        if (!write_reset_n)
-            write_full <= 1'b0;
-        else
-            write_full <= temp_write_full;
+    else begin
+        w_bin <= w_bin_nxt;
+        w_ptr <= w_gray_nxt;
     end
+end
+
+assign w_addr = w_bin[SIZE-1:0];
+assign w_bin_nxt = w_bin + (w_en & !w_full);
+
+// Binary to Gray converter
+binary_to_gray b2gW(.bin(w_bin_nxt), .gray(w_gray_nxt));
+
+// FIXED: Correct FIFO Full Detection Logic
+assign temp_w_full = (w_gray_nxt == {~s_rd_ptr[SIZE:SIZE-1], s_rd_ptr[SIZE-2:0]});
+
+always @(posedge w_clk or negedge w_rst_n) begin
+    if (!w_rst_n)
+        w_full <= 1'b0;
+    else
+        w_full <= temp_w_full;
+end
 
 endmodule
