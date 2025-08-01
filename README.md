@@ -1,4 +1,4 @@
-# Asynchronous FIFO Design Documentation
+# Asynchronous FIFO
 
 This document provides a detailed explanation of the Verilog modules that constitute this asynchronous First-In, First-Out (FIFO) memory design. The primary purpose of this FIFO is to safely pass data from a system operating on a write clock (`w_clk`) to another system operating on a read clock (`r_clk`), where `w_clk` and `r_clk` are asynchronous to each other.
 
