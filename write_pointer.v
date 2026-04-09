@@ -2,7 +2,7 @@ module Write_pointer #(parameter SIZE=4)(
     input w_clk, w_rst_n, w_en,
     input [SIZE:0] s_rd_ptr,
     output reg w_full,
- //   output [SIZE-1:0] w_addr,
+    output [SIZE-1:0] w_addr,
     output reg [SIZE:0] w_ptr
 );
 
