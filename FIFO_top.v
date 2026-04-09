@@ -117,7 +117,7 @@ module FIFO_top #(
         .r_en(r_en),
         .s_wr_ptr(synced_w_ptr), // Synchronized write pointer
         .r_empty(r_empty),
-        .r_addr(r_addr),
+    //    .r_addr(r_addr),
         .r_ptr(r_ptr)
     );
 
@@ -128,19 +128,19 @@ module FIFO_top #(
         .w_en(w_en),
         .s_rd_ptr(synced_r_ptr), // Synchronized read pointer
         .w_full(w_full),
-        .w_addr(w_addr),
+  //      .w_addr(w_addr),
         .w_ptr(w_ptr)
     );
 
     // FIFO memory instantiation
     FIFO_memory #(
         .DATASIZE(data),
-        .ADDRSIZE(addr)
+   //     .ADDRSIZE(addr)
     ) fifo_mem_inst (
         .rdata(rdata),
         .wdata(wdata),
-        .waddr(w_addr),
-        .raddr(r_addr),
+      //  .waddr(w_addr),
+     //   .raddr(r_addr),
         .wclken(w_en & ~w_full), // Directly use w_en (internal logic handles w_full)
         .wfull(w_full),
         .wclk(w_clk)
