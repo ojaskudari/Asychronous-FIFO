@@ -3,7 +3,7 @@ module Read_pointer #( parameter SIZE=4)(
     input [SIZE:0] s_wr_ptr,  // Corrected name to indicate it's the synchronized write pointer
 
     output reg r_empty,
-    wire [SIZE-1:0] r_addr,
+    //wire [SIZE-1:0] r_addr,
     output reg [SIZE:0] r_ptr
 );
 
